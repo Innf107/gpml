@@ -1,0 +1,45 @@
+/*@{
+(define unique-counter (cell 0))
+(define (new-unique-var) (string-append "u" (int->string (read-cell unique-counter))))
+
+(define global_vars_light (cell (list)))
+(define global_vars_dark  (cell (list)))
+
+(define (color light dark)
+    (let* [ (var_name (new-unique-var))
+            (global_light {--@{var_name}@: @{light}@;})
+            (global_dark  {--@{var_name}@: @{dark}@;})
+        ]
+        (update-cell! global_vars_light (lambda (vs) (append vs global_light)))
+        (update-cell! global_vars_dark  (lambda (vs) (append vs global_dark)))
+
+        {var(--@{var_name}@);}
+    ))
+
+(define (write_global_light) 
+    (defer (
+        (concat "\n" (read-cell global_vars_light))
+    )))
+
+(define (write_global_dark) 
+    (defer (
+        (concat "\n" (read-cell global_vars_dark))
+    )))
+}@*/
+    
+body {
+    @{write_global_light}@
+}
+
+body.dark {
+    @{write_global_dark}@
+}
+
+
+h1 {
+    color: @{(color {#000} {#fff}))}@;
+}
+
+h2 {
+    color: @{(color {#333} {#ccc})}@;
+}
