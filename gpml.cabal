@@ -87,7 +87,9 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , filepath
     , lens
+    , optparse-applicative
     , parsec
     , polysemy
     , polysemy-plugin
@@ -156,8 +158,10 @@ executable gpml
   build-depends:
       base >=4.7 && <5
     , containers
+    , filepath
     , gpml
     , lens
+    , optparse-applicative
     , parsec
     , polysemy
     , polysemy-plugin
@@ -227,8 +231,10 @@ test-suite gpml-test
   build-depends:
       base >=4.7 && <5
     , containers
+    , filepath
     , gpml
     , lens
+    , optparse-applicative
     , parsec
     , polysemy
     , polysemy-plugin

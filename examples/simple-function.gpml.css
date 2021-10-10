@@ -1,0 +1,18 @@
+/*
+@{
+(define (all-colors fg bg)
+    {
+    color: @{fg}@;
+    background-color: @{bg}@;
+    }
+)
+}@
+*/
+
+body {
+    @{(all-colors {black} {white})}@
+}
+
+.dark {
+    @{(all-colors {red} {black})}@
+}

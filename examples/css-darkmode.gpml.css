@@ -1,6 +1,6 @@
 /*@{
 (define unique-counter (cell 0))
-(define (new-unique-var) (string-append {u} (int->string (read-cell unique-counter))))
+(define (new-unique-var) {u@{(read-cell unique-counter)}@})
 
 (define global-vars-light (cell (list)))
 (define global-vars-dark  (cell (list)))

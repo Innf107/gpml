@@ -8,6 +8,8 @@ import qualified Data.Text.Lazy.Builder as T
 
 import Data.Char
 
+import Text.Read (read)
+
 import Text.Parsec as P
 import Text.Parsec.Pos as P
 
@@ -76,9 +78,12 @@ lex = go (InQuote mempty) 0
 
         go s@(InIdent _) _ EOF
             = throw $ UnexpectedEOF s
+        go (InIdent cs) d ('}' :> '@' :> rest)
+            = buildTextWith Ident cs +?> UnquoteEnd +> go (InQuote mempty) (d - 1) rest
         go s@(InIdent cs) d (c :> rest)
             | isIdent c = go (InIdent (cs <: c)) d rest
             | isParen c = buildTextWith Ident cs +?> Paren (one c) +> go Default d rest
+            | c == '{'  = buildTextWith Ident cs +?> QuoteStart +> go (InQuote mempty) (d + 1) rest
             | isSpace c = buildTextWith Ident cs +?> go Default d rest
             | otherwise = throw $ UnexpectedChar c s
 
@@ -86,6 +91,8 @@ lex = go (InQuote mempty) 0
             = throw $ UnexpectedEOF s
         go s@(InIntLit cs) d (c :> rest)
             | isDigit c = go (InIntLit (cs <: c)) d rest
+            | isSpace c = buildTextWith (TIntLit . read . toString) cs +?> go Default d rest
+            | isParen c = buildTextWith (TIntLit . read . toString) cs +?> Paren (one c) +> go Default d rest
             | otherwise = throw $ UnexpectedChar c s
 
         go s@(InDoubleLit _) _ EOF

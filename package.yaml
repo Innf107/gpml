@@ -29,6 +29,8 @@ dependencies:
 - witherable
 - lens
 - containers
+- optparse-applicative
+- filepath
 
 library:
   source-dirs: src
