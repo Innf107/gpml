@@ -26,6 +26,9 @@ dependencies:
 - polysemy
 - polysemy-plugin
 - parsec
+- witherable
+- lens
+- containers
 
 library:
   source-dirs: src

@@ -1,38 +1,38 @@
 /*@{
 (define unique-counter (cell 0))
-(define (new-unique-var) (string-append "u" (int->string (read-cell unique-counter))))
+(define (new-unique-var) (string-append {u} (int->string (read-cell unique-counter))))
 
-(define global_vars_light (cell (list)))
-(define global_vars_dark  (cell (list)))
+(define global-vars-light (cell (list)))
+(define global-vars-dark  (cell (list)))
 
 (define (color light dark)
-    (let* [ (var_name (new-unique-var))
-            (global_light {--@{var_name}@: @{light}@;})
-            (global_dark  {--@{var_name}@: @{dark}@;})
+    (let* [ (var-name (new-unique-var))
+            (global-light {--@{var-name}@: @{light}@;})
+            (global-dark  {--@{var-name}@: @{dark}@;})
         ]
-        (update-cell! global_vars_light (lambda (vs) (append vs global_light)))
-        (update-cell! global_vars_dark  (lambda (vs) (append vs global_dark)))
+        (update-cell! global-vars-light (lambda (vs) (append vs global-light)))
+        (update-cell! global-vars-dark  (lambda (vs) (append vs global-dark)))
 
-        {var(--@{var_name}@);}
+        {var(--@{var-name}@);}
     ))
 
-(define (write_global_light) 
+(define (write-global-light) 
     (defer (
-        (concat "\n" (read-cell global_vars_light))
+        (concat "\n" (read-cell global-vars-light))
     )))
 
-(define (write_global_dark) 
+(define (write-global-dark) 
     (defer (
-        (concat "\n" (read-cell global_vars_dark))
+        (concat "\n" (read-cell global-vars-dark))
     )))
 }@*/
     
 body {
-    @{write_global_light}@
+    @{write-global-light}@
 }
 
 body.dark {
-    @{write_global_dark}@
+    @{write-global-dark}@
 }
 
 

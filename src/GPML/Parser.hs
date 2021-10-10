@@ -22,59 +22,19 @@ data LexError = UnexpectedChar Char LexState
 data Token = Quoted Text
            | Ident Text
            | Paren Text
+           | TIntLit Int
+           | TDoubleLit Int
            | UnquoteStart
            | UnquoteEnd
            | QuoteStart
            | QuoteEnd
            deriving (Show, Eq)
 
-{-
-Example:
-
-test
-@{
-(define (f x) {f: @{x}@})
-}@
-
-f {test} evaluates to @{(f {test})}@
-
-=>
-[   Quoted "test\n"
-,   UnquoteStart
-,   Paren "("
-,   Ident "define"
-,   Paren "("
-,   Ident "f"
-,   Ident "x"
-,   Paren ")"
-,   QuoteStart
-,   Quoted "f: "
-,   UnquoteStart
-,   Ident "x"
-,   UnquoteEnd
-,   QuoteEnd
-,   Paren ")"
-,   UnquoteEnd
-,   Quoted "\n\nf {test} evaluates to "
-,   UnquoteStart
-,   Paren "("
-,   Ident "f"
-,   QuoteStart
-,   Quoted "test"
-,   QuoteEnd
-,   Paren ")"
-,   UnquoteEnd
-,   Quoted "\n\n"
--}
-
-{-
-Quoted Test
-(InUnquote "{")
--}
-
 data LexState = Default 
               | InQuote T.Builder
               | InIdent T.Builder
+              | InIntLit T.Builder
+              | InDoubleLit T.Builder
               deriving (Show, Eq)
 
 pattern (:>) :: Char -> Text -> Text
@@ -108,6 +68,7 @@ lex = go (InQuote mempty) 0
             = UnquoteEnd +> go (InQuote mempty) (d - 1) rest
         go Default d (c :> rest)
             | isSpace c = go Default d rest
+            | isDigit c = go (InIntLit (T.singleton c)) d rest
             | isIdent c = go (InIdent (T.singleton c)) d rest
             | isParen c = Paren (one c) +> go Default d rest
             | c == '{'  = QuoteStart +> go (InQuote mempty) (d + 1) rest
@@ -119,6 +80,18 @@ lex = go (InQuote mempty) 0
             | isIdent c = go (InIdent (cs <: c)) d rest
             | isParen c = buildTextWith Ident cs +?> Paren (one c) +> go Default d rest
             | isSpace c = buildTextWith Ident cs +?> go Default d rest
+            | otherwise = throw $ UnexpectedChar c s
+
+        go s@(InIntLit _) _ EOF
+            = throw $ UnexpectedEOF s
+        go s@(InIntLit cs) d (c :> rest)
+            | isDigit c = go (InIntLit (cs <: c)) d rest
+            | otherwise = throw $ UnexpectedChar c s
+
+        go s@(InDoubleLit _) _ EOF
+            = throw $ UnexpectedEOF s
+        go s@(InDoubleLit cs) d (c :> rest)
+            | isDigit c = go (InDoubleLit (cs <: c)) d rest
             | otherwise = throw $ UnexpectedChar c s
 
         buildTextWith :: (Text -> a) -> T.Builder -> Maybe a
@@ -205,7 +178,7 @@ sourceCode :: Parser Expr
 sourceCode = "source code" <??> SourceCode <$> many sourceCodeSeg
     where
         sourceCodeSeg = Quote <$> quoted 
-                     <|> UnQuote <$> (unquoteStart *> expr <* unquoteEnd) 
+                     <|> UnQuote <$> (unquoteStart *> many1' expr <* unquoteEnd) 
 
 expr :: Parser Expr
 expr = "expression" <??> parens (define <|> app)
@@ -215,7 +188,7 @@ expr = "expression" <??> parens (define <|> app)
 define :: Parser Expr
 define = "define" <??> defineTok *> 
     (   (DefineVar <$> ident <*> expr)
-    <|> (uncurry DefineFun <$> parens ((,) <$> ident <*> many ident) <*> many1 expr)
+    <|> (uncurry DefineFun <$> parens ((,) <$> ident <*> many ident) <*> many1' expr)
     )
 
 app :: Parser Expr
@@ -234,3 +207,5 @@ parens :: Parser a -> Parser a
 parens p =  paren "(" *> p <* paren ")"
         <|> paren "[" *> p <* paren "]"
 
+many1' :: Parser a -> Parser (NonEmpty a)
+many1' p = (:|) <$> p <*> many p 

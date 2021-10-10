@@ -2,6 +2,7 @@ module Main where
 
 import GPML.Prelude
 import GPML.Parser
+import GPML.Eval
 
 import Text.Parsec (parse)
 
@@ -16,4 +17,8 @@ main = do
             traverse_ print toks  
             case parse sourceCode "" toks of
                 Left e' -> putStrLn $ "parse error: " <> show e'
-                Right ast -> putStrLn $ "AST: " <> show ast
+                Right ast -> do 
+                    putStrLn $ "AST: " <> show ast
+                    case run $ runWithInitialFrames $ runError @EvalError $ eval ast of
+                        Left e -> putStrLn $ "eval error: " <> show e
+                        Right res -> print res
